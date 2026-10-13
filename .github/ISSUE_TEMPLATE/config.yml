@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://oleafly.com/security/
+    about: Report security problems privately, as the security policy describes. Please don't open an issue for them.
+  - name: Server docs
+    url: https://oleafly.com/docs/collaboration/server/
+    about: Setting up the server, sign-in providers, backups and updates.
+  - name: A problem in the Oleafly app
+    url: https://github.com/Oleafly/Oleafly/issues
+    about: Problems in the desktop app go to the Oleafly repository.

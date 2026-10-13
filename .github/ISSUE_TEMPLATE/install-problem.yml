@@ -1,0 +1,60 @@
+name: Install problem
+description: The installer or a manual setup didn't get the server running
+labels: ["install"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove secrets from everything you paste: client secrets, SMTP passwords, bucket keys and the setup code. Please don't paste your `.env` file.
+
+        Found a security problem? Don't open an issue. Follow the [security policy](https://oleafly.com/security/) instead.
+  - type: dropdown
+    id: method
+    attributes:
+      label: How did you install the server?
+      options:
+        - With the one-command installer (install.sh)
+        - With Docker Compose, by hand
+        - On Coolify
+        - On Render or Railway
+        - On Linux without Docker (systemd)
+    validations:
+      required: true
+  - type: input
+    id: release
+    attributes:
+      label: Release
+      description: The installer prints it on its first line. `sh /opt/oleafly-server/install.sh --version` shows it too.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system and processor
+      placeholder: Ubuntu 24.04 on x86-64
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: The command you ran, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Installer output
+      description: Paste what the installer printed. Check it for secrets first.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server and Caddy logs
+      description: The output of `cd /opt/oleafly-server && sudo docker compose logs --tail 100`. Check it for secrets and the setup code first.
+      render: text
+    validations:
+      required: false

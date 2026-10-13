@@ -1,0 +1,51 @@
+name: Server bug
+description: The server runs, but something in it doesn't work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Problems in the desktop app go to the [Oleafly repository](https://github.com/Oleafly/Oleafly/issues).
+
+        Remove secrets from everything you paste, and don't paste your `.env` file. Found a security problem? Follow the [security policy](https://oleafly.com/security/) instead of opening an issue.
+  - type: input
+    id: server-release
+    attributes:
+      label: Server release
+      description: "`sudo sh /opt/oleafly-server/install.sh status` shows it, and so does `docker compose exec oleafly-server oleafly-server --version`."
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: Oleafly app version
+      description: Shown in the About dialog.
+      placeholder: 0.4.6
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Share a project with a second account
+        2. Edit the same paragraph on both computers
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server log
+      description: The lines around the problem, from `cd /opt/oleafly-server && sudo docker compose logs oleafly-server`. Check them for secrets first.
+      render: text
+    validations:
+      required: false

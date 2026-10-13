@@ -1,0 +1,21 @@
+name: Question
+description: Ask about running an Oleafly server
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The [server docs](https://oleafly.com/docs/collaboration/server/) cover setup, sign-in providers, backups and updates. If they don't answer your question, ask it here.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Your setup
+      description: If it matters, how you installed the server, the release and the operating system.
+    validations:
+      required: false
