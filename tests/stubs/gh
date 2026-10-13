@@ -1,0 +1,70 @@
+#!/bin/sh
+printf 'gh %s\n' "$*" >>"$FIX/log"
+case "$1 $2" in
+	"api --paginate")
+		repo=${3#repos/}
+		repo=${repo%%/releases*}
+		shift 3
+		[ "$1" = --jq ] || exit 2
+		if [ "$repo" = "$SOURCE_REPO" ]; then
+			jq -r "$2" "$FIX/source.json"
+		else
+			jq -r "$2" "$FIX/target.json"
+		fi
+		;;
+	"release download")
+		tag=$3
+		shift 3
+		dir=
+		found=0
+		while [ $# -gt 0 ]; do
+			case $1 in
+				--dir)
+					dir=$2
+					shift
+					;;
+				--pattern)
+					if [ -f "$FIX/assets/$tag/$2" ]; then
+						cp "$FIX/assets/$tag/$2" "$dir/$2"
+						found=1
+					fi
+					shift
+					;;
+				--repo) shift ;;
+			esac
+			shift
+		done
+		if [ "$found" = 0 ]; then
+			echo "no assets match the file pattern" >&2
+			exit 1
+		fi
+		;;
+	"release create")
+		tag=$3
+		shift 3
+		mkdir -p "$FIX/created/$tag"
+		printf '%s\n' "$*" >"$FIX/created/$tag/args"
+		while [ $# -gt 0 ]; do
+			case $1 in
+				--repo | --target | --title)
+					shift
+					;;
+				--notes-file)
+					cp "$2" "$FIX/created/$tag/notes"
+					shift
+					;;
+				--*) ;;
+				*) basename "$1" >>"$FIX/created/$tag/files" ;;
+			esac
+			shift
+		done
+		jq --arg tag "$tag" '. + [{"tag_name": $tag}]' "$FIX/target.json" >"$FIX/target.json.new"
+		mv "$FIX/target.json.new" "$FIX/target.json"
+		ls "$FIX/created" >"$FIX/created-order.tmp"
+		printf '%s\n' "$tag" >>"$FIX/order"
+		;;
+	*)
+		echo "gh stub: no answer for $*" >&2
+		exit 2
+		;;
+esac

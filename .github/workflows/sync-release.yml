@@ -1,0 +1,139 @@
+name: Sync server release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Server tag to copy, such as server-v0.1.0. Leave it empty to copy every published release this repository doesn't have yet."
+        required: false
+        type: string
+  schedule:
+    - cron: "23 7 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-release
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Copy published server releases
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Copy new server releases from Oleafly/Oleafly
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_REPO: Oleafly/Oleafly
+          TARGET_REPO: ${{ github.repository }}
+          TAG: ${{ github.event.inputs.tag }}
+        run: |
+          set -euo pipefail
+          files=(install.sh docker-compose.yml Caddyfile env.example litestream.yml SHA256SUMS)
+          pattern='^server-v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+          work="$(mktemp -d)"
+          summary="${GITHUB_STEP_SUMMARY:-/dev/null}"
+
+          source_tags="$(gh api --paginate "repos/${SOURCE_REPO}/releases?per_page=100" --jq '.[] | select(.draft == false) | .tag_name')"
+          published="$(printf '%s\n' "$source_tags" | grep -E "$pattern" | sort -V || true)"
+          existing="$(gh api --paginate "repos/${TARGET_REPO}/releases?per_page=100" --jq '.[].tag_name')"
+
+          if [ -n "${TAG:-}" ]; then
+            if [[ ! "$TAG" =~ $pattern ]]; then
+              echo "::error::'${TAG}' is not a server tag such as server-v0.1.0"
+              exit 1
+            fi
+            if ! printf '%s\n' "$published" | grep -qxF "$TAG"; then
+              echo "::error::${TAG} is not a published release in ${SOURCE_REPO}. Drafts don't count."
+              exit 1
+            fi
+            wanted="$TAG"
+          else
+            wanted="$published"
+          fi
+
+          if [ -z "$wanted" ]; then
+            echo "No published server releases in ${SOURCE_REPO} yet."
+            echo "No published server releases in ${SOURCE_REPO} yet." >> "$summary"
+            exit 0
+          fi
+
+          newest_stable="$(printf '%s\n%s\n' "$published" "$existing" | grep -E "$pattern" | sed 's/^server-v//' | grep -v -- - | sort -V | tail -n 1 || true)"
+          newest_stable="${newest_stable:+server-v$newest_stable}"
+          copied=0
+
+          for tag in $wanted; do
+            if printf '%s\n' "$existing" | grep -qxF "$tag"; then
+              echo "${tag} is already here."
+              continue
+            fi
+            version="${tag#server-v}"
+            dir="$work/$tag"
+            mkdir -p "$dir"
+            patterns=()
+            for file in "${files[@]}"; do
+              patterns+=(--pattern "$file")
+            done
+            gh release download "$tag" --repo "$SOURCE_REPO" --dir "$dir" "${patterns[@]}"
+            for file in "${files[@]}"; do
+              if [ ! -s "$dir/$file" ]; then
+                echo "::error::${tag} in ${SOURCE_REPO} has no ${file}"
+                exit 1
+              fi
+            done
+            for file in "${files[@]}"; do
+              [ "$file" = SHA256SUMS ] && continue
+              expected="$(awk -v name="$file" '{ n = $2; sub(/^\*/, "", n); if (n == name) { print $1; exit } }' "$dir/SHA256SUMS")"
+              actual="$(sha256sum "$dir/$file" | awk '{ print $1 }')"
+              if [ -z "$expected" ]; then
+                echo "::error::SHA256SUMS in ${tag} has no line for ${file}"
+                exit 1
+              fi
+              if [ "$expected" != "$actual" ]; then
+                echo "::error::${file} in ${tag} doesn't match SHA256SUMS (expected ${expected}, got ${actual}). Nothing was copied."
+                exit 1
+              fi
+            done
+            if ! grep -qx "installer_version=${version}" "$dir/install.sh"; then
+              echo "::error::install.sh in ${tag} isn't stamped with ${version}"
+              exit 1
+            fi
+            if ! awk -v want="$version" '$1 == "image:" && $2 ~ /\/oleafly-server:/ { n = split($2, part, ":"); if (part[n] == want) found = 1 } END { exit !found }' "$dir/docker-compose.yml"; then
+              echo "::error::docker-compose.yml in ${tag} doesn't use the ${version} server image"
+              exit 1
+            fi
+
+            flags=()
+            if [[ "$version" == *-* ]]; then
+              flags+=(--prerelease --latest=false)
+            elif [ "$tag" = "$newest_stable" ]; then
+              flags+=(--latest)
+            else
+              flags+=(--latest=false)
+            fi
+            notes="$work/$tag.md"
+            {
+              echo "Oleafly Server ${version}."
+              echo
+              echo "To install it on a Linux machine, run:"
+              echo
+              echo '```sh'
+              echo "curl -fsSL https://oleafly.com/server/install.sh | sudo sh"
+              echo '```'
+              echo
+              echo "These are the installer and its files from [Oleafly Server ${version}](https://github.com/${SOURCE_REPO}/releases/tag/${tag}), checked against its SHA256SUMS. The full release notes and the server as a single program for x86-64 and ARM Linux are there."
+              echo
+              echo "To check a download, run \`sha256sum --check --ignore-missing SHA256SUMS\` in the folder that holds it."
+            } > "$notes"
+            gh release create "$tag" --repo "$TARGET_REPO" --target "${GITHUB_SHA}" \
+              --title "Oleafly Server ${version}" --notes-file "$notes" "${flags[@]}" \
+              "$dir/install.sh" "$dir/docker-compose.yml" "$dir/Caddyfile" "$dir/env.example" "$dir/litestream.yml" "$dir/SHA256SUMS"
+            echo "Copied ${tag}."
+            echo "Copied ${tag} from ${SOURCE_REPO}." >> "$summary"
+            copied=$((copied + 1))
+          done
+
+          echo "${copied} new release(s) copied."
