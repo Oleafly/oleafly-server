@@ -9,33 +9,33 @@ You run it yourself, on a machine your group or institution controls. If you run
 On a Linux machine with a domain name pointing at it:
 
 ```sh
-curl -fsSL https://oleafly.com/server/install.sh | sh
+curl -fsSL https://oleafly.com/server/install.sh | sudo sh
 ```
 
 The installer:
 
 1. Checks the machine: Linux on x86-64 or ARM, and ports 80 and 443 free.
 2. Checks for Docker. If it is missing, it asks before installing it.
-3. Asks for your domain, a name for the server and how people sign in.
+3. Asks for your domain, a name for the server and how people sign in. It also offers to set up email and to keep files in an S3 bucket.
 4. Writes its files to `/opt/oleafly-server`, with your settings in `.env` readable only by root. It never overwrites an existing `.env`.
 5. Starts the server from the published image, with Caddy in front for HTTPS.
 6. Waits until the server answers, then prints the setup code and what to do next.
 
 To finish, open Oleafly, choose **Add server**, enter your server's address and use the setup code to become its first admin.
 
-If your institution doesn't allow piping a script into a shell, download `install.sh` from the [latest release](https://github.com/Oleafly/oleafly-server/releases/latest), check it against `SHA256SUMS` and run it, or follow the manual steps below.
+If your institution doesn't allow piping a script into a shell, download `install.sh` and `SHA256SUMS` from the [latest release](https://github.com/Oleafly/oleafly-server/releases/latest), check the script with `sha256sum --check --ignore-missing SHA256SUMS`, read it and run it with `sudo sh install.sh`. Or use one of the other ways below.
 
 ## What you need
 
 - A Linux machine that stays on. A small virtual machine is enough to start. Keep an eye on its memory and disk as your projects grow.
 - A domain name, such as `collab.example.org`, with a DNS record pointing at the machine, and ports 80 and 443 open to it.
-- A way for people to sign in: GitHub, your institution's sign-in (OpenID Connect), or an email account the server can send from.
+- A way for people to sign in: a GitHub OAuth app, or your institution's sign-in (OpenID Connect). An email account the server can send from is optional. With it, the server can send invitations and notifications.
 
 ## Other ways to run it
 
 | Option | When to use it |
 | --- | --- |
-| Docker Compose by hand | Download `docker-compose.yml`, `Caddyfile` and `.env.example` from the [latest release](https://github.com/Oleafly/oleafly-server/releases/latest), fill in `.env`, then run `docker compose up -d`. |
+| Docker Compose by hand | Download `docker-compose.yml`, `Caddyfile`, `litestream.yml`, `env.example` and `SHA256SUMS` from the [latest release](https://github.com/Oleafly/oleafly-server/releases/latest) and check them. Rename `env.example` to `.env`, fill it in, then run `docker compose up -d`. |
 | Coolify | You already run a Coolify server. |
 | Render or Railway | You'd rather pay a hosting service than look after a machine. |
 | Linux without Docker | A university machine where you can't use Docker. Each server release on the [Oleafly releases page](https://github.com/Oleafly/Oleafly/releases) includes a single Linux program for x86-64 and ARM. |
@@ -47,10 +47,12 @@ The [server guide](https://oleafly.com/docs/collaboration/server/) walks through
 Run the installer again with `update`:
 
 ```sh
-curl -fsSL https://oleafly.com/server/install.sh | sh -s -- update
+curl -fsSL https://oleafly.com/server/install.sh | sudo sh -s -- update
 ```
 
-It downloads the new release's files and image, keeps your `.env`, restarts the server and waits until it answers. People connected at the time reconnect by themselves.
+It downloads the new release's files and image, keeps your `.env`, restarts the server and waits until it answers. People connected at the time reconnect by themselves. It never moves a server to an older release.
+
+To check on the server, run `sudo sh /opt/oleafly-server/install.sh status`. To remove it, run the same command with `uninstall`. Your data stays unless you type `delete` when it asks.
 
 ## Back up
 
