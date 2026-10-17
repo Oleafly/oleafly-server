@@ -1,8 +1,92 @@
-# Oleafly Server
+<!-- Images live in .github/readme. Light and dark versions swap with GitHub's theme. -->
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/readme/banner-dark.webp" />
+  <img src=".github/readme/banner-light.webp" alt="Oleafly Server: write together, on a server your group runs. Self-hosted, one-command install, free and open source." width="100%" />
+</picture>
+
+<div align="center">
+
+**[Install](#install)** &nbsp;·&nbsp;
+**[Server guide](https://oleafly.com/docs/collaboration/server/)** &nbsp;·&nbsp;
+**[Security](https://oleafly.com/security/)** &nbsp;·&nbsp;
+**[Releases](https://github.com/Oleafly/oleafly-server/releases/latest)** &nbsp;·&nbsp;
+**[Get help](#get-help)**
+
+</div>
 
 Oleafly Server lets the people in your lab, course or research group write together in [Oleafly](https://oleafly.com) at the same time. Everyone keeps each project as real files on their own computer. The server passes changes, comments and files between them. When someone's connection drops, or they work offline for a while, their changes catch up once they're back.
 
 You run it yourself, on a machine your group or institution controls. If you run a server, this repository is where you get it, update it and report problems.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/readme/collab-dark.webp" />
+  <img src=".github/readme/collab-light.webp" alt="Five co-authors editing results.tex at once in Oleafly, with named cursors, margin comments and the compiled PDF" width="100%" />
+</picture>
+
+## What the server does
+
+<table>
+  <tr>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/collab.webp" width="52" alt="" /><br />
+      <b><a href="https://oleafly.com/docs/collaboration/">Live co-editing</a></b><br />
+      <sub>Named cursors, comments and replies as people type. Everyone keeps real files, and offline edits catch up later.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/install.webp" width="52" alt="" /><br />
+      <b><a href="#install">One-command install</a></b><br />
+      <sub>One script sets up Docker, HTTPS through Caddy and your settings. Run it again to update.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/signin.webp" width="52" alt="" /><br />
+      <b><a href="https://oleafly.com/docs/collaboration/server-access/">Your sign-in</a></b><br />
+      <sub>Your institution's OpenID Connect provider, GitHub, or a link sent by email.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/roles.webp" width="52" alt="" /><br />
+      <b>Roles and access rules</b><br />
+      <sub>An allowed list, domain rules and four roles from admin to guest. Guests see only the projects they're invited to.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/devices.webp" width="52" alt="" /><br />
+      <b>Device keys</b><br />
+      <sub>Every device has its own key, so a copied token is useless without it. Signing a device out takes effect at once.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/signed.webp" width="52" alt="" /><br />
+      <b>Signed changes</b><br />
+      <sub>The device that makes a change signs it, and the server builds snapshots from that signed log.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/log.webp" width="52" alt="" /><br />
+      <b>Security log</b><br />
+      <sub>Sign-ins, refused sign-ins, admin actions and device changes, each with the client address.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/backup.webp" width="52" alt="" /><br />
+      <b><a href="#back-up">Your data, your backups</a></b><br />
+      <sub>One data folder, or that folder plus an S3 bucket. Litestream can keep a continuous copy.</sub>
+    </td>
+    <td width="33%" valign="top">
+      <img src=".github/readme/icons/nocalls.webp" width="52" alt="" /><br />
+      <b><a href="https://oleafly.com/security/">No outside calls</a></b><br />
+      <sub>The server talks only to the sign-in provider you set up. Each release ships a shell-less image and an SBOM.</sub>
+    </td>
+  </tr>
+</table>
+
+## The admin console
+
+Admins run the server from inside Oleafly. The console covers people and their roles, access rules, projects, server settings, email, the security log and connection checks.
+
+<p align="center">
+  <img src=".github/readme/admin-console.webp" alt="The Oleafly Server admin console showing the People page for University Lab, with each member's role, devices and actions" width="100%" />
+</p>
 
 ## Install
 
